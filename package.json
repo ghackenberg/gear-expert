@@ -1,0 +1,54 @@
+{
+    "name": "gear-expert",
+    "version": "0.0.1",
+    "license": "UNLICENSED",
+    "private": true,
+    "type": "module",
+    "author": {
+        "name": "Georg Hackenberg",
+        "email": "georg.hackenberg@fh-wels.at",
+        "url": "https://www.linkedin.com/in/georghackenberg/"
+    },
+    "contributors": [
+        {
+            "name": "Georg Hackenberg",
+            "email": "georg.hackenberg@fh-wels.at",
+            "url": "https://www.linkedin.com/in/georghackenberg/"
+        },
+        {
+            "name": "Christian Zehetner",
+            "email": "christian.zehetner@fh-wels.at",
+            "url": "https://www.linkedin.com/in/christian-zehetner-7a9996107/"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ghackenberg/gear-expert/",
+        "directory": "/"
+    },
+    "devDependencies": {
+        "@types/react": "^18.3.3",
+        "@types/react-dom": "^18.3.0",
+        "@types/react-router-dom": "^5.3.3",
+        "@types/three": "^0.166.0",
+        "copy-webpack-plugin": "^12.0.2",
+        "html-webpack-plugin": "^5.6.0",
+        "ts-loader": "^9.5.1",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.5.3",
+        "webpack": "^5.93.0",
+        "webpack-cli": "^5.1.4",
+        "webpack-dev-server": "^5.0.4"
+    },
+    "dependencies": {
+        "@react-three/fiber": "^8.16.8",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "react-router-dom": "^6.24.1",
+        "three": "^0.166.1"
+    },
+    "scripts": {
+        "build": "webpack",
+        "serve": "webpack serve"
+    }
+}
