@@ -2,12 +2,12 @@ import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
-import { Index } from './components/Index'
+import { World } from './world'
 
 // Router
 
 const router = createBrowserRouter([
-    { path: '/', element: <Index/> }
+    { path: '/', element: <World/> }
 ])
 
 // Container
@@ -20,6 +20,7 @@ container.style.height = '100vh'
 // Body
 
 document.body.appendChild(container)
+document.body.style.overflow = 'hidden'
 document.body.style.margin = '0'
 
 // Root
