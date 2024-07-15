@@ -32,6 +32,11 @@ export function World() {
 
     // States
 
+    const [ambient] = React.useState(new THREE.AmbientLight())
+    const [point] = React.useState(new THREE.PointLight())
+    const [dummy10] = React.useState(createGear(10, 'plain', 0, 0, 0, 0, 0, 1, 1, 1))
+    const [dummy20] = React.useState(createGear(20, 'plain', 0, 0, 0, 0, 0, 1, 1, 1))
+    const [dummy30] = React.useState(createGear(30, 'plain', 0, 0, 0, 0, 0, 1, 1, 1))
     const [scene] = React.useState(new THREE.Scene())
     const [camera] = React.useState(new THREE.PerspectiveCamera())
     const [renderer] = React.useState(new THREE.WebGLRenderer())
@@ -40,23 +45,29 @@ export function World() {
     // Effects
 
     React.useEffect(() => {
+        ambient.color.set('white')
+        ambient.intensity = 0.5
+
+        point.position.set(0.3, 0.3, 0.3)
+        point.color.set('white')
+        point.intensity = 1
+
         const grid = new THREE.GridHelper(1, 100)
 
-        const ambient = new THREE.AmbientLight('white', 0.5)
+        const gear10 = createGear(10, 'shaft', x1, 0, 0, angle1, speed1, Math.random(), Math.random(), Math.random())
+        const gear20 = createGear(20, 'shaft', x2, 0, 0, angle2, speed2, Math.random(), Math.random(), Math.random())
+        const gear30 = createGear(30, 'shaft', x3, 0, 0, angle3, speed3, Math.random(), Math.random(), Math.random())
 
-        const point = new THREE.PointLight('white', 0.5)
-        point.position.x = 0.3
-        point.position.y = 0.3
-        point.position.z = 0.3
+        dummy10.visible = false
+        dummy20.visible = false
+        dummy30.visible = false
 
-        scene.background = new THREE.Color('white')
+        scene.add(ambient, point)
         scene.add(grid)
-        scene.add(ambient)
-        scene.add(point)
-
-        addGear(10, 'shaft', x1, 0, 0, angle1, speed1)
-        addGear(20, 'shaft', x2, 0, 0, angle2, speed2)
-        addGear(30, 'shaft', x3, 0, 0, angle3, speed3)
+        scene.add(dummy10, dummy20, dummy30)
+        scene.add(gear10, gear20, gear30)
+        scene.background = new THREE.Color('white')
+        scene.userData.next = choose()
 
         camera.position.set(0, 0.2, 0.1)
         camera.lookAt(0, 0, 0)
@@ -78,40 +89,6 @@ export function World() {
 
     // Functions
 
-    function addGear(teeth: number, style: 'plain' | 'shaft', x: number, y: number, z: number, angle: number, speed: number) {
-        const gear = new THREE.Group()
-        gear.position.x = x
-        gear.position.y = y
-        gear.position.z = z
-        gear.rotation.y = angle
-        gear.userData = { teeth, style, x, y, z, angle, speed }
-
-        loader.loadAsync(`models/${style}/gear${teeth}.gltf`).then(model => {
-            const r = Math.random()
-            const g = Math.random()
-            const b = Math.random()
-
-            model.scene.position.y = -0.005
-            
-            for (const parent of model.scene.children) {
-                for (const child of parent.children) {
-                    const mesh = child as THREE.Mesh
-
-                    const material  = mesh.material as THREE.MeshStandardMaterial
-                    material.color.r = r
-                    material.color.g = g
-                    material.color.b = b
-                }
-            }
-
-            gear.add(model.scene)
-        })
-
-        scene.add(gear)
-
-        onFrame()
-    }
-
     function onResize() {
         camera.aspect = ref.current.offsetWidth / ref.current.offsetHeight
         camera.updateProjectionMatrix()
@@ -132,26 +109,129 @@ export function World() {
         renderer.render(scene ,camera)
     }
 
-    function onClick(event: React.MouseEvent<HTMLDivElement>) {
+    function locate(event: React.MouseEvent<HTMLDivElement>, y = 0) {
         const x = +((event.pageX - ref.current.offsetLeft)  / ref.current.offsetWidth) * 2 - 1
-        const y = -((event.pageY - ref.current.offsetTop) / ref.current.offsetHeight) * 2 + 1
+        const z = -((event.pageY - ref.current.offsetTop) / ref.current.offsetHeight) * 2 + 1
 
-        const mouse = new THREE.Vector2(x, y)
+        const mouse = new THREE.Vector2(x, z)
 
         raycaster.setFromCamera(mouse, camera)
 
         const origin = raycaster.ray.origin
         const direction = raycaster.ray.direction
-        const distance = -origin.y / direction.y
+        const distance = (y - origin.y) / direction.y
         const position = origin.add(direction.multiplyScalar(distance))
 
-        addGear(Math.floor(Math.random() * 3) * 10 + 10, 'shaft', round(position.x), round(position.y), round(position.z), 0, 0.01)
+        position.x = round(position.x)
+        position.z = round(position.z)
+
+        return position
+    }
+
+    function onMouseOver(event: React.MouseEvent<HTMLDivElement>) {
+        const position = locate(event)
+
+        const next = scene.userData.next
+
+        if (next == 10) {
+            dummy10.visible = true
+            dummy10.position.copy(position)
+        } else if (next == 20) {
+            dummy20.visible = true
+            dummy20.position.copy(position)
+        } else if (next == 30) {
+            dummy30.visible = true
+            dummy30.position.copy(position)
+        }
+    }
+
+    function onMouseMove(event: React.MouseEvent<HTMLDivElement>) {
+        const position = locate(event)
+
+        const next = scene.userData.next
+
+        if (next == 10) {
+            dummy10.visible = true
+            dummy10.position.copy(position)
+        } else if (next == 20) {
+            dummy20.visible = true
+            dummy20.position.copy(position)
+        } else if (next == 30) {
+            dummy30.visible = true
+            dummy30.position.copy(position)
+        }
+    }
+
+    function onClick(event: React.MouseEvent<HTMLDivElement>) {
+        const position = locate(event)
+
+        const next = scene.userData.next
+
+        const gear = createGear(next, 'shaft', position.x, position.y, position.z, 0, 0.01, Math.random(), Math.random(), Math.random())
+
+        scene.add(gear)
+
+        if (next == 10) {
+            dummy10.visible = false
+        } else if (next == 20) {
+            dummy20.visible = false
+        } else if (next == 30) {
+            dummy30.visible = false
+        }
+
+        scene.userData.next = choose()
+
+        onFrame()
+    }
+
+    function onMouseOut(event: React.MouseEvent<HTMLDivElement>) {
+        const next = scene.userData.next
+
+        if (next == 10) {
+            dummy10.visible = false
+        } else if (next == 20) {
+            dummy20.visible = false
+        } else if (next == 30) {
+            dummy30.visible = false
+        }
     }
 
     // Return
     
-    return <div ref={ref} style={{width: '100%', height: '100%'}} onClick={onClick}/>
+    return <div ref={ref} style={{width: '100%', height: '100%'}} onMouseOver={onMouseOver} onMouseMove={onMouseMove} onClick={onClick} onMouseOut={onMouseOut}/>
 
+}
+
+function createGear(teeth: number, style: 'plain' | 'shaft', x: number, y: number, z: number, angle: number, speed: number, r: number, g: number, b: number) {
+    const group = new THREE.Group()
+    group.position.x = x
+    group.position.y = y
+    group.position.z = z
+    group.rotation.y = angle
+    group.userData = { teeth, style, x, y, z, angle, speed, r, g, b }
+
+    loader.loadAsync(`models/${style}/gear${teeth}.gltf`).then(model => {
+        model.scene.position.y = -0.005
+        
+        for (const parent of model.scene.children) {
+            for (const child of parent.children) {
+                const mesh = child as THREE.Mesh
+
+                const material  = mesh.material as THREE.MeshStandardMaterial
+                material.color.r = r
+                material.color.g = g
+                material.color.b = b
+            }
+        }
+
+        group.add(model.scene)
+    })
+
+    return group
+}
+
+function choose() {
+    return Math.floor(Math.random() * 3) * 10 + 10
 }
 
 function round(value: number) {
