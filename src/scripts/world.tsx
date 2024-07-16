@@ -335,7 +335,9 @@ export function World() {
     return (
         <div id='world'>
             <div id='canvas' ref={canvasRef} draggable onDragStart={onDragStartCanvas} onDragOver={onDragOverCanvas} onDrop={onDropCanvas}/>
-            <div id='trash' onDragOver={onDragOverTrash} onDragLeave={onDragLeaveTrash} onDrop={onDropTrash}/>
+            <div id='trash' onDragOver={onDragOverTrash} onDragLeave={onDragLeaveTrash} onDrop={onDropTrash}>
+                <img src='/images/trash.png'/>
+            </div>
             <div id='palette' onDragOver={onDragOverPalette} onDrop={onDropPalette}>
                 <Gear teeth={10} onDragStart={onDragStartPaletteItem}/>
                 <Gear teeth={20} onDragStart={onDragStartPaletteItem}/>
