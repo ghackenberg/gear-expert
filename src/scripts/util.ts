@@ -35,3 +35,12 @@ export function createGear(teeth: number, style: 'plain' | 'shaft', x: number, y
 export function round(value: number) {
     return Math.round(value * 100) / 100
 }
+
+export function snap(original: THREE.Vector3) {
+    const clone = original.clone()
+
+    clone.x = round(clone.x)
+    clone.z = round(clone.z)
+
+    return clone
+}

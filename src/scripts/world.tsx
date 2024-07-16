@@ -1,7 +1,9 @@
 import * as React from 'react'
 import * as THREE from 'three'
-import { createGear, round } from './util'
+import { createGear, round, snap } from './util'
 import { Gear } from './gear'
+
+const module = 0.002
 
 export function World() {
 
@@ -117,9 +119,6 @@ export function World() {
         const distance = (y - origin.y) / direction.y
         const position = origin.add(direction.multiplyScalar(distance))
 
-        position.x = round(position.x)
-        position.z = round(position.z)
-
         return position
     }
 
@@ -137,6 +136,76 @@ export function World() {
             return intersections[0].object
         } else {
             return null
+        }
+    }
+
+    function collides(gear: THREE.Object3D) {
+        const myTeeth = gear.userData.teeth
+        const myDiameter = myTeeth * module
+
+        for (const other of gears.children) {
+            if (other != gear) {
+                const distance = other.position.clone().sub(gear.position).length()
+                
+                const otherTeeth = other.userData.teeth
+                const otherDiameter = otherTeeth * module
+
+                const minDistance = otherDiameter / 2 + myDiameter / 2
+
+                if (distance < minDistance) {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    function reposition(gear: THREE.Object3D, mouse: THREE.Vector3) {
+        if (collides(gear)) {
+            const original = gear.position.clone()
+
+            let c0 = 0, c1 = 0, c2 = 0, c3 = 0
+
+            while (collides(gear)) {
+                c0++
+                gear.position.x += module
+            }
+
+            gear.position.copy(original)
+
+            while (collides(gear)) {
+                c1++
+                gear.position.x -= module
+            }
+
+            gear.position.copy(original)
+
+            while (collides(gear)) {
+                c2++
+                gear.position.z += module
+            }
+
+            gear.position.copy(original)
+
+            while (collides(gear)) {
+                c3++
+                gear.position.z -= module
+            }
+
+            gear.position.copy(original)
+
+            const min = Math.min(c0, c1, c2, c3)
+
+            if (min == c0) {
+                gear.position.x += c0 * module
+            } else if (min == c1) {
+                gear.position.x -= c1 * module
+            } else if (min == c2) {
+                gear.position.z += c2 * module
+            } else if (min == c3) {
+                gear.position.z -= c3 * module
+            }
         }
     }
 
@@ -185,25 +254,30 @@ export function World() {
 
     function onDragOverCanvas(event: React.DragEvent<HTMLDivElement>) {
         event.preventDefault()
-        const position = locate(event)
+        const mouse = locate(event)
+        const position = snap(mouse)
         const action = scene.userData.action
         const name = scene.userData.name
         if (action == 'create') {
             // Show and position dummy
             const dummy = dummies.getObjectByName(name)
             dummy.visible = true
-            dummies.position.copy(position)
+            dummy.position.copy(position)
+            reposition(dummy, mouse)
         } else if (action == 'update') {
-            // Show and position gearx
+            // Check overlap
+            // Show and position gear
             const gear = gears.getObjectByName(name)
             gear.visible = true
             gear.position.copy(position)
+            reposition(gear, mouse)
         }
     }
 
     function onDropCanvas(event: React.DragEvent<HTMLDivElement>) {
         event.preventDefault()
-        const position = locate(event)
+        const mouse = locate(event)
+        const position = snap(mouse)
         const action = scene.userData.action
         const name = scene.userData.name
         if (action == 'create') {
@@ -212,8 +286,9 @@ export function World() {
             const dummy = dummies.getObjectByName(name)
             dummy.visible = false
             // Add gear
-            const gear = createGear(name, 'shaft', position.x, position.y, position.z, 0, (Math.random() - 0.5) / 50, Math.random(), Math.random(), Math.random(), `${gears.userData.count++}`)
+            const gear = createGear(name, 'shaft', position.x, position.y - Math.random() / 100000, position.z, 0, (Math.random() - 0.5) / 50, Math.random(), Math.random(), Math.random(), `${gears.userData.count++}`)
             gears.add(gear)
+            reposition(gear, mouse)
         }
     }
 
