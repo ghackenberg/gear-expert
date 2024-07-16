@@ -12,8 +12,6 @@ export function World() {
 
     // States
 
-    const [ambient] = React.useState(new THREE.AmbientLight())
-    const [point] = React.useState(new THREE.PointLight())
     const [lights] = React.useState(new THREE.Group())
     const [dummies] = React.useState(new THREE.Group())
     const [gears] = React.useState(new THREE.Group())
@@ -32,9 +30,11 @@ export function World() {
 
         // Lights
 
+        const ambient = new THREE.AmbientLight()
         ambient.color.set('white')
         ambient.intensity = 0.5
 
+        const point = new THREE.PointLight()
         point.position.set(0.3, 0.3, 0.3)
         point.color.set('white')
         point.intensity = 1
