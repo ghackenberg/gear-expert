@@ -1,8 +1,6 @@
 import * as React from 'react'
 import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-
-const loader = new GLTFLoader()
+import { choose, createGear, round } from './util'
 
 export function World() {
 
@@ -200,40 +198,4 @@ export function World() {
     
     return <div ref={ref} style={{width: '100%', height: '100%'}} onMouseOver={onMouseOver} onMouseMove={onMouseMove} onClick={onClick} onMouseOut={onMouseOut}/>
 
-}
-
-function createGear(teeth: number, style: 'plain' | 'shaft', x: number, y: number, z: number, angle: number, speed: number, r: number, g: number, b: number) {
-    const group = new THREE.Group()
-    group.position.x = x
-    group.position.y = y
-    group.position.z = z
-    group.rotation.y = angle
-    group.userData = { teeth, style, x, y, z, angle, speed, r, g, b }
-
-    loader.loadAsync(`models/${style}/gear${teeth}.gltf`).then(model => {
-        model.scene.position.y = -0.005
-        
-        for (const parent of model.scene.children) {
-            for (const child of parent.children) {
-                const mesh = child as THREE.Mesh
-
-                const material  = mesh.material as THREE.MeshStandardMaterial
-                material.color.r = r
-                material.color.g = g
-                material.color.b = b
-            }
-        }
-
-        group.add(model.scene)
-    })
-
-    return group
-}
-
-function choose() {
-    return Math.floor(Math.random() * 3) * 10 + 10
-}
-
-function round(value: number) {
-    return Math.round(value * 100) / 100
 }
