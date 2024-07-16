@@ -166,7 +166,7 @@ export function World() {
 
     function onDragStartPalette(event: React.DragEvent<HTMLDivElement>) {
         scene.userData.action = 'create'
-        scene.userData.gear = event.currentTarget.id
+        scene.userData.name = event.currentTarget.id
         event.dataTransfer.setDragImage(document.createElement('div'), 0, 0)
     }
 
@@ -175,7 +175,7 @@ export function World() {
         if (gear) {
             scene.userData.position = new THREE.Vector3().copy(gear.parent.parent.parent.position)
             scene.userData.action = 'update'
-            scene.userData.gear = gear.parent.parent.parent.name
+            scene.userData.name = gear.parent.parent.parent.name
             event.dataTransfer.setDragImage(document.createElement('div'), 0, 0)
         } else {
             event.preventDefault()
@@ -184,19 +184,15 @@ export function World() {
 
     function onDragOverPalette(event: React.DragEvent<HTMLDivElement>) {
         const action = scene.userData.action
-        const gear = scene.userData.gear
+        const name = scene.userData.name
         if (action == 'create') {
-            for (const dummy of dummies.children) {
-                if (dummy.name == gear) {
-                    dummy.visible = false
-                }
-            }
+            // Hide dummy
+            const dummy = dummies.getObjectByName(name)
+            dummy.visible = false
         } else if (action == 'update') {
-            for (const child of gears.children) {
-                if (child.name == gear) {
-                    child.position.copy(scene.userData.position)
-                }
-            }
+            // Position gear
+            const gear = gears.getObjectByName(name)
+            gear.position.copy(scene.userData.position)
         }
     }
 
@@ -204,42 +200,32 @@ export function World() {
         event.preventDefault()
         const position = locate(event)
         const action = scene.userData.action
-        const gear = scene.userData.gear
+        const name = scene.userData.name
         if (action == 'create') {
-            for (const dummy of dummies.children) {
-                if (dummy.name == gear) {
-                    dummy.visible = true
-                }
-            }
+            // Show and position dummy
+            const dummy = dummies.getObjectByName(name)
+            dummy.visible = true
             dummies.position.copy(position)
         } else if (action == 'update') {
-            for (const child of gears.children) {
-                if (child.name == gear) {
-                    child.visible = true
-                    child.position.copy(position)
-                }
-            }
+            // Show and position gearx
+            const gear = gears.getObjectByName(name)
+            gear.visible = true
+            gear.position.copy(position)
         }
     }
 
     function onDragOverTrash(event: React.DragEvent<HTMLDivElement>) {
         const action = scene.userData.action
-        const gear = scene.userData.gear
+        const name = scene.userData.name
         if (action == 'create') {
-            for (const dummy of dummies.children) {
-                if (dummy.name == gear) {
-                    dummy.visible = false
-                }
-            }
+            // Hide dummy
+            const dummy = dummies.getObjectByName(name)
+            dummy.visible = false
         } else if (action == 'update') {
             event.preventDefault()
-            event.currentTarget.style.color = 'white'
-            event.currentTarget.style.background = 'red'
-            for (const child of gears.children) {
-                if (child.name == gear) {
-                    child.visible = false
-                }
-            }
+            // Hide gear
+            const gear = gears.getObjectByName(name)
+            gear.visible = false
         }
     }
 
@@ -247,30 +233,25 @@ export function World() {
         event.preventDefault()
         const position = locate(event)
         const action = scene.userData.action
-        const gear = scene.userData.gear
+        const name = scene.userData.name
         if (action == 'create') {
-            for (const dummy of dummies.children) {
-                if (dummy.name == gear) {
-                    dummy.visible = false
-                }
-            }
-            const child = createGear(gear, 'shaft', position.x, position.y, position.z, 0, (Math.random() - 0.5) / 50, Math.random(), Math.random(), Math.random(), `${gears.userData.count++}`)
-            gears.add(child)
+            // Hide dummy
+            const dummy = dummies.getObjectByName(name)
+            dummy.visible = false
+            // Add gear
+            const gear = createGear(name, 'shaft', position.x, position.y, position.z, 0, (Math.random() - 0.5) / 50, Math.random(), Math.random(), Math.random(), `${gears.userData.count++}`)
+            gears.add(gear)
         }
     }
 
     function onDropTrash(event: React.DragEvent<HTMLDivElement>) {
         const action = scene.userData.action
-        const gear = scene.userData.gear
+        const name = scene.userData.name
         if (action == 'update') {
             event.preventDefault()
-            event.currentTarget.style.color = 'black'
-            event.currentTarget.style.background = 'white'
-            for (const child of gears.children) {
-                if (child.name == gear) {
-                    gears.remove(child)
-                }
-            }
+            // Remove gear
+            const gear = gears.getObjectByName(name)
+            gears.remove(gear)
         }
     }
 
@@ -285,8 +266,10 @@ export function World() {
         background: 'white',
         top: '1em',
         left: '1em',
-        padding: '1em',
-        borderRadius: '1em',
+        width: '7em',
+        lineHeight: '7em',
+        textAlign: 'center',
+        borderRadius: '100%',
         boxShadow: '0.25em 0.25em 1em rgba(0,0,0,0.5)'
     }
     const paletteStyle: React.CSSProperties = {
@@ -295,8 +278,7 @@ export function World() {
         top: '1em',
         right: '1em',
         bottom: '1em',
-        padding: '1em',
-        borderRadius: '1em',
+        width: '7em',
         boxShadow: '0.25em 0.25em 1em rgba(0,0,0,0.5)'
     }
 
