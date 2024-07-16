@@ -3,8 +3,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 const loader = new GLTFLoader()
 
-export function createGear(teeth: number, style: 'plain' | 'shaft', x: number, y: number, z: number, angle: number, speed: number, r: number, g: number, b: number) {
+export function createGear(teeth: number, style: 'plain' | 'shaft', x: number, y: number, z: number, angle: number, speed: number, r: number, g: number, b: number, name: string) {
     const group = new THREE.Group()
+    group.name = name
     group.position.x = x
     group.position.y = y
     group.position.z = z
@@ -29,10 +30,6 @@ export function createGear(teeth: number, style: 'plain' | 'shaft', x: number, y
     })
 
     return group
-}
-
-export function choose() {
-    return Math.floor(Math.random() * 3) * 10 + 10
 }
 
 export function round(value: number) {

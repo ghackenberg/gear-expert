@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as THREE from 'three'
-import { choose, createGear, round } from './util'
+import { createGear, round } from './util'
 
 export function World() {
 
@@ -32,9 +32,9 @@ export function World() {
 
     const [ambient] = React.useState(new THREE.AmbientLight())
     const [point] = React.useState(new THREE.PointLight())
-    const [dummy10] = React.useState(createGear(10, 'plain', 0, 0, 0, 0, 0, 1, 1, 1))
-    const [dummy20] = React.useState(createGear(20, 'plain', 0, 0, 0, 0, 0, 1, 1, 1))
-    const [dummy30] = React.useState(createGear(30, 'plain', 0, 0, 0, 0, 0, 1, 1, 1))
+    const [lights] = React.useState(new THREE.Group())
+    const [dummies] = React.useState(new THREE.Group())
+    const [gears] = React.useState(new THREE.Group())
     const [scene] = React.useState(new THREE.Scene())
     const [camera] = React.useState(new THREE.PerspectiveCamera())
     const [renderer] = React.useState(new THREE.WebGLRenderer())
@@ -43,6 +43,13 @@ export function World() {
     // Effects
 
     React.useEffect(() => {
+
+        // Grid
+
+        const grid = new THREE.GridHelper(1, 100)
+
+        // Lights
+
         ambient.color.set('white')
         ambient.intensity = 0.5
 
@@ -50,25 +57,41 @@ export function World() {
         point.color.set('white')
         point.intensity = 1
 
-        const grid = new THREE.GridHelper(1, 100)
+        lights.add(ambient, point)
 
-        const gear10 = createGear(10, 'shaft', x1, 0, 0, angle1, speed1, Math.random(), Math.random(), Math.random())
-        const gear20 = createGear(20, 'shaft', x2, 0, 0, angle2, speed2, Math.random(), Math.random(), Math.random())
-        const gear30 = createGear(30, 'shaft', x3, 0, 0, angle3, speed3, Math.random(), Math.random(), Math.random())
+        // Dummies
 
-        dummy10.visible = false
-        dummy20.visible = false
-        dummy30.visible = false
+        const dummy0 = createGear(10, 'plain', 0, 0, 0, 0, 0, 1, 1, 1, '10')
+        dummy0.visible = false
 
-        scene.add(ambient, point)
-        scene.add(grid)
-        scene.add(dummy10, dummy20, dummy30)
-        scene.add(gear10, gear20, gear30)
+        const dummy1 = createGear(20, 'plain', 0, 0, 0, 0, 0, 1, 1, 1, '20')
+        dummy1.visible = false
+
+        const dummy2 = createGear(30, 'plain', 0, 0, 0, 0, 0, 1, 1, 1, '30')
+        dummy2.visible = false
+
+        dummies.add(dummy0, dummy1, dummy2)
+
+        // Gears
+
+        const gear10 = createGear(10, 'shaft', x1, 0, 0, angle1, speed1, Math.random(), Math.random(), Math.random(), '0')
+        const gear20 = createGear(20, 'shaft', x2, 0, 0, angle2, speed2, Math.random(), Math.random(), Math.random(), '1')
+        const gear30 = createGear(30, 'shaft', x3, 0, 0, angle3, speed3, Math.random(), Math.random(), Math.random(), '2')
+
+        gears.userData.count = 3
+        gears.add(gear10, gear20, gear30)
+
+        // Scene
+
+        scene.add(grid, lights, dummies, gears)
         scene.background = new THREE.Color('white')
-        scene.userData.next = choose()
+
+        // Camera
 
         camera.position.set(0, 0.2, 0.1)
         camera.lookAt(0, 0, 0)
+
+        // Renderer
 
         ref.current.appendChild(renderer.domElement)
 
@@ -97,11 +120,9 @@ export function World() {
     }
 
     function onFrame() {
-        for (const child of scene.children) {
-            if (child.userData.speed) {
-                const { speed } = child.userData
-                child.rotation.y += speed
-            }
+        for (const child of gears.children) {
+            const { speed } = child.userData
+            child.rotation.y += speed
         }
 
         renderer.render(scene ,camera)
@@ -126,76 +147,175 @@ export function World() {
         return position
     }
 
-    function onMouseOver(event: React.MouseEvent<HTMLDivElement>) {
-        const position = locate(event)
+    function intersect(event: React.MouseEvent<HTMLDivElement>) {
+        const x = +((event.pageX - ref.current.offsetLeft)  / ref.current.offsetWidth) * 2 - 1
+        const z = -((event.pageY - ref.current.offsetTop) / ref.current.offsetHeight) * 2 + 1
 
-        const next = scene.userData.next
+        const mouse = new THREE.Vector2(x, z)
 
-        if (next == 10) {
-            dummy10.visible = true
-            dummy10.position.copy(position)
-        } else if (next == 20) {
-            dummy20.visible = true
-            dummy20.position.copy(position)
-        } else if (next == 30) {
-            dummy30.visible = true
-            dummy30.position.copy(position)
+        raycaster.setFromCamera(mouse, camera)
+
+        const intersections = raycaster.intersectObjects(gears.children, true)
+
+        if (intersections.length > 0) {
+            return intersections[0].object
+        } else {
+            return null
         }
     }
 
-    function onMouseMove(event: React.MouseEvent<HTMLDivElement>) {
-        const position = locate(event)
+    function onDragStartPalette(event: React.DragEvent<HTMLDivElement>) {
+        scene.userData.action = 'create'
+        scene.userData.gear = event.currentTarget.id
+        event.dataTransfer.setDragImage(document.createElement('div'), 0, 0)
+    }
 
-        const next = scene.userData.next
-
-        if (next == 10) {
-            dummy10.visible = true
-            dummy10.position.copy(position)
-        } else if (next == 20) {
-            dummy20.visible = true
-            dummy20.position.copy(position)
-        } else if (next == 30) {
-            dummy30.visible = true
-            dummy30.position.copy(position)
+    function onDragStartCanvas(event: React.DragEvent<HTMLDivElement>) {
+        const gear = intersect(event)
+        if (gear) {
+            scene.userData.position = new THREE.Vector3().copy(gear.parent.parent.parent.position)
+            scene.userData.action = 'update'
+            scene.userData.gear = gear.parent.parent.parent.name
+            event.dataTransfer.setDragImage(document.createElement('div'), 0, 0)
+        } else {
+            event.preventDefault()
         }
     }
 
-    function onClick(event: React.MouseEvent<HTMLDivElement>) {
-        const position = locate(event)
-
-        const next = scene.userData.next
-
-        const gear = createGear(next, 'shaft', position.x, position.y, position.z, 0, 0.01, Math.random(), Math.random(), Math.random())
-
-        scene.add(gear)
-
-        if (next == 10) {
-            dummy10.visible = false
-        } else if (next == 20) {
-            dummy20.visible = false
-        } else if (next == 30) {
-            dummy30.visible = false
+    function onDragOverPalette(event: React.DragEvent<HTMLDivElement>) {
+        const action = scene.userData.action
+        const gear = scene.userData.gear
+        if (action == 'create') {
+            for (const dummy of dummies.children) {
+                if (dummy.name == gear) {
+                    dummy.visible = false
+                }
+            }
+        } else if (action == 'update') {
+            for (const child of gears.children) {
+                if (child.name == gear) {
+                    child.position.copy(scene.userData.position)
+                }
+            }
         }
-
-        scene.userData.next = choose()
-
-        onFrame()
     }
 
-    function onMouseOut(event: React.MouseEvent<HTMLDivElement>) {
-        const next = scene.userData.next
-
-        if (next == 10) {
-            dummy10.visible = false
-        } else if (next == 20) {
-            dummy20.visible = false
-        } else if (next == 30) {
-            dummy30.visible = false
+    function onDragOverCanvas(event: React.DragEvent<HTMLDivElement>) {
+        event.preventDefault()
+        const position = locate(event)
+        const action = scene.userData.action
+        const gear = scene.userData.gear
+        if (action == 'create') {
+            for (const dummy of dummies.children) {
+                if (dummy.name == gear) {
+                    dummy.visible = true
+                }
+            }
+            dummies.position.copy(position)
+        } else if (action == 'update') {
+            for (const child of gears.children) {
+                if (child.name == gear) {
+                    child.visible = true
+                    child.position.copy(position)
+                }
+            }
         }
+    }
+
+    function onDragOverTrash(event: React.DragEvent<HTMLDivElement>) {
+        const action = scene.userData.action
+        const gear = scene.userData.gear
+        if (action == 'create') {
+            for (const dummy of dummies.children) {
+                if (dummy.name == gear) {
+                    dummy.visible = false
+                }
+            }
+        } else if (action == 'update') {
+            event.preventDefault()
+            event.currentTarget.style.color = 'white'
+            event.currentTarget.style.background = 'red'
+            for (const child of gears.children) {
+                if (child.name == gear) {
+                    child.visible = false
+                }
+            }
+        }
+    }
+
+    function onDropCanvas(event: React.DragEvent<HTMLDivElement>) {
+        event.preventDefault()
+        const position = locate(event)
+        const action = scene.userData.action
+        const gear = scene.userData.gear
+        if (action == 'create') {
+            for (const dummy of dummies.children) {
+                if (dummy.name == gear) {
+                    dummy.visible = false
+                }
+            }
+            const child = createGear(gear, 'shaft', position.x, position.y, position.z, 0, (Math.random() - 0.5) / 50, Math.random(), Math.random(), Math.random(), `${gears.userData.count++}`)
+            gears.add(child)
+        }
+    }
+
+    function onDropTrash(event: React.DragEvent<HTMLDivElement>) {
+        const action = scene.userData.action
+        const gear = scene.userData.gear
+        if (action == 'update') {
+            event.preventDefault()
+            event.currentTarget.style.color = 'black'
+            event.currentTarget.style.background = 'white'
+            for (const child of gears.children) {
+                if (child.name == gear) {
+                    gears.remove(child)
+                }
+            }
+        }
+    }
+
+    // Styles
+
+    const canvasStyle: React.CSSProperties = {
+        width: '100%',
+        height: '100%'
+    }
+    const trashStyle: React.CSSProperties = {
+        position: 'absolute',
+        background: 'white',
+        top: '1em',
+        left: '1em',
+        padding: '1em',
+        borderRadius: '1em',
+        boxShadow: '0.25em 0.25em 1em rgba(0,0,0,0.5)'
+    }
+    const paletteStyle: React.CSSProperties = {
+        position: 'absolute',
+        background: 'white',
+        top: '1em',
+        right: '1em',
+        bottom: '1em',
+        padding: '1em',
+        borderRadius: '1em',
+        boxShadow: '0.25em 0.25em 1em rgba(0,0,0,0.5)'
     }
 
     // Return
     
-    return <div ref={ref} style={{width: '100%', height: '100%'}} onMouseOver={onMouseOver} onMouseMove={onMouseMove} onClick={onClick} onMouseOut={onMouseOut}/>
+    return (
+        <>
+            <div ref={ref} style={canvasStyle} draggable onDragStart={onDragStartCanvas} onDragOver={onDragOverCanvas} onDrop={onDropCanvas}>
+                {/*Empty*/}
+            </div>
+            <div style={trashStyle} onDragOver={onDragOverTrash} onDrop={onDropTrash}>
+                Trash    
+            </div>
+            <div style={paletteStyle} onDragOver={onDragOverPalette}>
+                <div id='10' draggable onDragStart={onDragStartPalette}>Gear 10</div>
+                <div id='20' draggable onDragStart={onDragStartPalette}>Gear 20</div>
+                <div id='30' draggable onDragStart={onDragStartPalette}>Gear 30</div>
+            </div>
+        </>
+    )
 
 }

@@ -16,12 +16,15 @@ const container = document.createElement('div')
 container.className = 'root'
 container.style.width = '100vw'
 container.style.height = '100vh'
+container.style.position = 'relative'
 
 // Body
 
 document.body.appendChild(container)
-document.body.style.overflow = 'hidden'
+document.body.style.width = '100vw'
+document.body.style.height = '100vh'
 document.body.style.margin = '0'
+document.body.style.overflow = 'hidden'
 
 // Root
 
