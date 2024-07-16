@@ -4,7 +4,7 @@ import { createGear, round } from './util'
 
 export function World() {
 
-    const ref = React.createRef<HTMLDivElement>()
+    const canvasRef = React.createRef<HTMLDivElement>()
 
     const module = 0.002
 
@@ -93,7 +93,7 @@ export function World() {
 
         // Renderer
 
-        ref.current.appendChild(renderer.domElement)
+        canvasRef.current.appendChild(renderer.domElement)
 
         onResize()
 
@@ -111,10 +111,10 @@ export function World() {
     // Functions
 
     function onResize() {
-        camera.aspect = ref.current.offsetWidth / ref.current.offsetHeight
+        camera.aspect = canvasRef.current.offsetWidth / canvasRef.current.offsetHeight
         camera.updateProjectionMatrix()
 
-        renderer.setSize(ref.current.offsetWidth, ref.current.offsetHeight)
+        renderer.setSize(canvasRef.current.offsetWidth, canvasRef.current.offsetHeight)
 
         onFrame()
     }
@@ -129,8 +129,8 @@ export function World() {
     }
 
     function locate(event: React.MouseEvent<HTMLDivElement>, y = 0) {
-        const x = +((event.pageX - ref.current.offsetLeft)  / ref.current.offsetWidth) * 2 - 1
-        const z = -((event.pageY - ref.current.offsetTop) / ref.current.offsetHeight) * 2 + 1
+        const x = +((event.pageX - canvasRef.current.offsetLeft)  / canvasRef.current.offsetWidth) * 2 - 1
+        const z = -((event.pageY - canvasRef.current.offsetTop) / canvasRef.current.offsetHeight) * 2 + 1
 
         const mouse = new THREE.Vector2(x, z)
 
@@ -148,8 +148,8 @@ export function World() {
     }
 
     function intersect(event: React.MouseEvent<HTMLDivElement>) {
-        const x = +((event.pageX - ref.current.offsetLeft)  / ref.current.offsetWidth) * 2 - 1
-        const z = -((event.pageY - ref.current.offsetTop) / ref.current.offsetHeight) * 2 + 1
+        const x = +((event.pageX - canvasRef.current.offsetLeft)  / canvasRef.current.offsetWidth) * 2 - 1
+        const z = -((event.pageY - canvasRef.current.offsetTop) / canvasRef.current.offsetHeight) * 2 + 1
 
         const mouse = new THREE.Vector2(x, z)
 
@@ -164,10 +164,35 @@ export function World() {
         }
     }
 
-    function onDragStartPalette(event: React.DragEvent<HTMLDivElement>) {
+    function onDragStartPaletteItem(event: React.DragEvent<HTMLDivElement>) {
         scene.userData.action = 'create'
         scene.userData.name = event.currentTarget.id
+        event.currentTarget.style.background = 'gray'
         event.dataTransfer.setDragImage(document.createElement('div'), 0, 0)
+    }
+
+    function onDragOverPalette(event: React.DragEvent<HTMLDivElement>) {
+        event.preventDefault()
+        const action = scene.userData.action
+        const name = scene.userData.name
+        if (action == 'create') {
+            // Hide dummy
+            const dummy = dummies.getObjectByName(name)
+            dummy.visible = false
+        } else if (action == 'update') {
+            // Position gear
+            const gear = gears.getObjectByName(name)
+            gear.position.copy(scene.userData.position)
+        }
+    }
+
+    function onDropPalette(event: React.DragEvent<HTMLDivElement>) {
+        event.preventDefault()
+        const action = scene.userData.action
+        const name = scene.userData.name
+        if (action == 'create') {
+            document.getElementById(name).style.background = 'lightgray'
+        }
     }
 
     function onDragStartCanvas(event: React.DragEvent<HTMLDivElement>) {
@@ -179,20 +204,6 @@ export function World() {
             event.dataTransfer.setDragImage(document.createElement('div'), 0, 0)
         } else {
             event.preventDefault()
-        }
-    }
-
-    function onDragOverPalette(event: React.DragEvent<HTMLDivElement>) {
-        const action = scene.userData.action
-        const name = scene.userData.name
-        if (action == 'create') {
-            // Hide dummy
-            const dummy = dummies.getObjectByName(name)
-            dummy.visible = false
-        } else if (action == 'update') {
-            // Position gear
-            const gear = gears.getObjectByName(name)
-            gear.position.copy(scene.userData.position)
         }
     }
 
@@ -214,27 +225,13 @@ export function World() {
         }
     }
 
-    function onDragOverTrash(event: React.DragEvent<HTMLDivElement>) {
-        const action = scene.userData.action
-        const name = scene.userData.name
-        if (action == 'create') {
-            // Hide dummy
-            const dummy = dummies.getObjectByName(name)
-            dummy.visible = false
-        } else if (action == 'update') {
-            event.preventDefault()
-            // Hide gear
-            const gear = gears.getObjectByName(name)
-            gear.visible = false
-        }
-    }
-
     function onDropCanvas(event: React.DragEvent<HTMLDivElement>) {
         event.preventDefault()
         const position = locate(event)
         const action = scene.userData.action
         const name = scene.userData.name
         if (action == 'create') {
+            document.getElementById(name).style.background = 'lightgray'
             // Hide dummy
             const dummy = dummies.getObjectByName(name)
             dummy.visible = false
@@ -244,11 +241,34 @@ export function World() {
         }
     }
 
-    function onDropTrash(event: React.DragEvent<HTMLDivElement>) {
+    function onDragOverTrash(event: React.DragEvent<HTMLDivElement>) {
+        event.preventDefault()
+        event.currentTarget.style.background = 'gray'
         const action = scene.userData.action
         const name = scene.userData.name
-        if (action == 'update') {
-            event.preventDefault()
+        if (action == 'create') {
+            // Hide dummy
+            const dummy = dummies.getObjectByName(name)
+            dummy.visible = false
+        } else if (action == 'update') {
+            // Hide gear
+            const gear = gears.getObjectByName(name)
+            gear.visible = false
+        }
+    }
+
+    function onDragLeaveTrash(event: React.DragEvent<HTMLDivElement>) {
+        event.currentTarget.style.background = 'lightgray'
+    }
+
+    function onDropTrash(event: React.DragEvent<HTMLDivElement>) {
+        event.preventDefault()
+        event.currentTarget.style.background = 'lightgray'
+        const action = scene.userData.action
+        const name = scene.userData.name
+        if (action == 'create') {
+            document.getElementById(name).style.background = 'lightgray'
+        } else if (action == 'update') {
             // Remove gear
             const gear = gears.getObjectByName(name)
             gears.remove(gear)
@@ -259,43 +279,50 @@ export function World() {
 
     const canvasStyle: React.CSSProperties = {
         width: '100%',
-        height: '100%'
+        height: '100%',
+        userSelect: 'none'
     }
     const trashStyle: React.CSSProperties = {
         position: 'absolute',
-        background: 'white',
         top: '1em',
         left: '1em',
         width: '7em',
         lineHeight: '7em',
         textAlign: 'center',
-        borderRadius: '100%',
-        boxShadow: '0.25em 0.25em 1em rgba(0,0,0,0.5)'
+        background: 'lightgray',
+        boxShadow: '0.25em 0.25em 1em rgba(0,0,0,0.5)',
+        userSelect: 'none'
     }
     const paletteStyle: React.CSSProperties = {
         position: 'absolute',
-        background: 'white',
+        display: 'flex',
+        gap: '0.25em',
         top: '1em',
         right: '1em',
-        bottom: '1em',
+        background: 'white',
+        boxShadow: '0.25em 0.25em 1em rgba(0,0,0,0.5)',
+        userSelect: 'none'
+    }
+    const paletteItemStyle: React.CSSProperties = {
         width: '7em',
-        boxShadow: '0.25em 0.25em 1em rgba(0,0,0,0.5)'
+        lineHeight: '7em',
+        textAlign: 'center',
+        background: 'lightgray',
+        userSelect: 'none'
     }
 
     // Return
     
     return (
         <>
-            <div ref={ref} style={canvasStyle} draggable onDragStart={onDragStartCanvas} onDragOver={onDragOverCanvas} onDrop={onDropCanvas}>
+            <div id='canvas' ref={canvasRef} style={canvasStyle} draggable onDragStart={onDragStartCanvas} onDragOver={onDragOverCanvas} onDrop={onDropCanvas}>
                 {/*Empty*/}
             </div>
-            <div style={trashStyle} onDragOver={onDragOverTrash} onDrop={onDropTrash}>
-                Trash    
-            </div>
-            <div style={paletteStyle} onDragOver={onDragOverPalette}>
-                <div id='10' draggable onDragStart={onDragStartPalette}>Gear 10</div>
-                <div id='20' draggable onDragStart={onDragStartPalette}>Gear 20</div>
-                <div id='30' draggable onDragStart={onDragStartPalette}>Gear 30</div>
+            <div id='trash' style={trashStyle} onDragOver={onDragOverTrash} onDragLeave={onDragLeaveTrash} onDrop={onDropTrash}>Trash</div>
+            <div id='palette' style={paletteStyle} onDragOver={onDragOverPalette} onDrop={onDropPalette}>
+                <div id='10' style={paletteItemStyle} draggable onDragStart={onDragStartPaletteItem}>Gear 10</div>
+                <div id='20' style={paletteItemStyle} draggable onDragStart={onDragStartPaletteItem}>Gear 20</div>
+                <div id='30' style={paletteItemStyle} draggable onDragStart={onDragStartPaletteItem}>Gear 30</div>
             </div>
         </>
     )
