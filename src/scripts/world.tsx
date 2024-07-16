@@ -1,32 +1,11 @@
 import * as React from 'react'
 import * as THREE from 'three'
 import { createGear, round } from './util'
+import { Gear } from './gear'
 
 export function World() {
 
     const canvasRef = React.createRef<HTMLDivElement>()
-
-    const module = 0.002
-
-    const teeth1 = 10
-    const teeth2 = 20
-    const teeth3 = 30
-
-    const diameter1 = teeth1 * module
-    const diameter2 = teeth2 * module
-    const diameter3 = teeth3 * module
-
-    const x1 = -0.050
-    const x2 = x1 + diameter1 / 2 + diameter2 / 2
-    const x3 = x2 + diameter2 / 2 + diameter3 / 2
-
-    const angle1 = 0
-    const angle2 = Math.PI * 2 / teeth2 / 2
-    const angle3 = 0
-
-    const speed1 = 0.04
-    const speed2 = -speed1 * teeth1 / teeth2
-    const speed3 = -speed2 * teeth2 / teeth3
 
     // States
 
@@ -37,7 +16,7 @@ export function World() {
     const [gears] = React.useState(new THREE.Group())
     const [scene] = React.useState(new THREE.Scene())
     const [camera] = React.useState(new THREE.PerspectiveCamera())
-    const [renderer] = React.useState(new THREE.WebGLRenderer())
+    const [renderer] = React.useState(new THREE.WebGLRenderer({ antialias: true }))
     const [raycaster] = React.useState(new THREE.Raycaster())
 
     // Effects
@@ -74,12 +53,7 @@ export function World() {
 
         // Gears
 
-        const gear10 = createGear(10, 'shaft', x1, 0, 0, angle1, speed1, Math.random(), Math.random(), Math.random(), '0')
-        const gear20 = createGear(20, 'shaft', x2, 0, 0, angle2, speed2, Math.random(), Math.random(), Math.random(), '1')
-        const gear30 = createGear(30, 'shaft', x3, 0, 0, angle3, speed3, Math.random(), Math.random(), Math.random(), '2')
-
-        gears.userData.count = 3
-        gears.add(gear10, gear20, gear30)
+        gears.userData.count = 0
 
         // Scene
 
@@ -95,7 +69,9 @@ export function World() {
 
         canvasRef.current.appendChild(renderer.domElement)
 
-        onResize()
+        setTimeout(onResize, 0)
+
+        // Loop and resize
 
         renderer.setAnimationLoop(onFrame)
 
@@ -167,7 +143,7 @@ export function World() {
     function onDragStartPaletteItem(event: React.DragEvent<HTMLDivElement>) {
         scene.userData.action = 'create'
         scene.userData.name = event.currentTarget.id
-        event.currentTarget.style.background = 'gray'
+        event.currentTarget.className = 'active'
         event.dataTransfer.setDragImage(document.createElement('div'), 0, 0)
     }
 
@@ -191,7 +167,7 @@ export function World() {
         const action = scene.userData.action
         const name = scene.userData.name
         if (action == 'create') {
-            document.getElementById(name).style.background = 'lightgray'
+            document.getElementById(name).className = undefined
         }
     }
 
@@ -231,7 +207,7 @@ export function World() {
         const action = scene.userData.action
         const name = scene.userData.name
         if (action == 'create') {
-            document.getElementById(name).style.background = 'lightgray'
+            document.getElementById(name).className = 'undefined'
             // Hide dummy
             const dummy = dummies.getObjectByName(name)
             dummy.visible = false
@@ -243,9 +219,11 @@ export function World() {
 
     function onDragOverTrash(event: React.DragEvent<HTMLDivElement>) {
         event.preventDefault()
-        event.currentTarget.style.background = 'gray'
+        event.currentTarget.className = 'hover'
+
         const action = scene.userData.action
         const name = scene.userData.name
+
         if (action == 'create') {
             // Hide dummy
             const dummy = dummies.getObjectByName(name)
@@ -258,16 +236,18 @@ export function World() {
     }
 
     function onDragLeaveTrash(event: React.DragEvent<HTMLDivElement>) {
-        event.currentTarget.style.background = 'lightgray'
+        event.currentTarget.className = undefined
     }
 
     function onDropTrash(event: React.DragEvent<HTMLDivElement>) {
         event.preventDefault()
-        event.currentTarget.style.background = 'lightgray'
+        event.currentTarget.className = undefined
+
         const action = scene.userData.action
         const name = scene.userData.name
+
         if (action == 'create') {
-            document.getElementById(name).style.background = 'lightgray'
+            document.getElementById(name).className = undefined
         } else if (action == 'update') {
             // Remove gear
             const gear = gears.getObjectByName(name)
@@ -275,56 +255,18 @@ export function World() {
         }
     }
 
-    // Styles
-
-    const canvasStyle: React.CSSProperties = {
-        width: '100%',
-        height: '100%',
-        userSelect: 'none'
-    }
-    const trashStyle: React.CSSProperties = {
-        position: 'absolute',
-        top: '1em',
-        left: '1em',
-        width: '7em',
-        lineHeight: '7em',
-        textAlign: 'center',
-        background: 'lightgray',
-        boxShadow: '0.25em 0.25em 1em rgba(0,0,0,0.5)',
-        userSelect: 'none'
-    }
-    const paletteStyle: React.CSSProperties = {
-        position: 'absolute',
-        display: 'flex',
-        gap: '0.25em',
-        top: '1em',
-        right: '1em',
-        background: 'white',
-        boxShadow: '0.25em 0.25em 1em rgba(0,0,0,0.5)',
-        userSelect: 'none'
-    }
-    const paletteItemStyle: React.CSSProperties = {
-        width: '7em',
-        lineHeight: '7em',
-        textAlign: 'center',
-        background: 'lightgray',
-        userSelect: 'none'
-    }
-
     // Return
     
     return (
-        <>
-            <div id='canvas' ref={canvasRef} style={canvasStyle} draggable onDragStart={onDragStartCanvas} onDragOver={onDragOverCanvas} onDrop={onDropCanvas}>
-                {/*Empty*/}
+        <div id='world'>
+            <div id='canvas' ref={canvasRef} draggable onDragStart={onDragStartCanvas} onDragOver={onDragOverCanvas} onDrop={onDropCanvas}/>
+            <div id='trash' onDragOver={onDragOverTrash} onDragLeave={onDragLeaveTrash} onDrop={onDropTrash}/>
+            <div id='palette' onDragOver={onDragOverPalette} onDrop={onDropPalette}>
+                <Gear teeth={10} onDragStart={onDragStartPaletteItem}/>
+                <Gear teeth={20} onDragStart={onDragStartPaletteItem}/>
+                <Gear teeth={30} onDragStart={onDragStartPaletteItem}/>
             </div>
-            <div id='trash' style={trashStyle} onDragOver={onDragOverTrash} onDragLeave={onDragLeaveTrash} onDrop={onDropTrash}>Trash</div>
-            <div id='palette' style={paletteStyle} onDragOver={onDragOverPalette} onDrop={onDropPalette}>
-                <div id='10' style={paletteItemStyle} draggable onDragStart={onDragStartPaletteItem}>Gear 10</div>
-                <div id='20' style={paletteItemStyle} draggable onDragStart={onDragStartPaletteItem}>Gear 20</div>
-                <div id='30' style={paletteItemStyle} draggable onDragStart={onDragStartPaletteItem}>Gear 30</div>
-            </div>
-        </>
+        </div>
     )
 
 }

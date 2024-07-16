@@ -25,12 +25,12 @@ const config = {
     plugins: [
         new CopyPlugin({
             patterns: [
-                { from: 'src/models', to: 'models' }
+                { from: 'src/models', to: 'models' },
+                { from: 'src/images', to: 'images' },
+                { from: 'src/styles', to: 'styles' }
             ]
         }),
-        new HtmlWebpackPlugin({
-            title: 'Gear Expert'
-        })
+        new HtmlWebpackPlugin()
     ]
 }
 

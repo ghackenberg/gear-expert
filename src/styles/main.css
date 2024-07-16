@@ -1,0 +1,83 @@
+body {
+    margin: 0;
+
+    overflow: hidden;
+}
+
+#root {
+    width: 100vw;
+    height: 100vh;
+
+    position: relative;
+}
+
+#world {
+    width: 100vw;
+    height: 100vh;
+
+    position: relative;
+}
+
+#canvas {
+    width: 100vw;
+    height: 100vh;
+
+    user-select: none;
+}
+
+#trash {
+    position: absolute;
+
+    top: 1em;
+    left: 1em;
+
+    width: 7em;
+    height: 7em;
+
+    border-radius: 100%;
+
+    background-color: lightgray;
+    background-image: url(/images/trash.png);
+    background-size: 3em;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    box-shadow: 0.25em 0.25em 1em rgba(0,0,0,0.5);
+    
+    user-select: none;
+}
+#trash.hover {
+    background-color: gray;
+}
+
+#palette {
+    position: absolute;
+
+    top: 1em;
+    right: 1em;
+
+    display: flex;
+
+    flex-direction: column-reverse;
+    
+    gap: 1em;
+    
+    user-select: none;
+}
+#palette > * {
+    width: 7em;
+    height: 7em;
+
+    border-radius: 100%;
+
+    text-align: center;
+
+    background-color: lightgray;
+
+    box-shadow: 0.25em 0.25em 1em rgba(0,0,0,0.5);
+
+    user-select: none;
+}
+#palette > *.active {
+    background-color: gray;
+} 
