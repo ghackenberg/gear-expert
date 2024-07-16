@@ -4,6 +4,7 @@ import { createGear, round, snap } from './util'
 import { Gear } from './gear'
 
 const module = 0.002
+const epsilon = 0.00001
 
 export function World() {
 
@@ -152,7 +153,11 @@ export function World() {
 
                 const minDistance = otherDiameter / 2 + myDiameter / 2
 
-                if (distance < minDistance) {
+                if (distance < minDistance - epsilon) {
+                    return true
+                } else if (distance < minDistance + epsilon) {
+                    // Ignore
+                } else if (distance < minDistance + module * 2) {
                     return true
                 }
             }
