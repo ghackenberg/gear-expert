@@ -1,5 +1,6 @@
 import * as React from 'react'
 import * as THREE from 'three'
+
 import { createGear, snap } from './util'
 import { Gear } from './gear'
 
