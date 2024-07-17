@@ -1,7 +1,5 @@
 import url from 'url'
 import path from 'path'
-import webpack from 'webpack'
-import CopyPlugin from 'copy-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 
 const __filename = url.fileURLToPath(import.meta.url)
@@ -15,21 +13,32 @@ const config = {
     },
     module: {
         rules: [
-            { test: /\.tsx?$/, loader: 'ts-loader' }
+            {
+                test: /\.tsx?$/,
+                loader: 'ts-loader'
+            },{
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader']
+            },{
+                test: /\.(svg|png|jpe?g|gif)$/,
+                type: 'asset/resource',
+                generator: {
+                    filename: 'images/[hash][ext][query]'
+                }
+            },{
+                test: /\.glb$/,
+                type: 'asset/resource',
+                generator: {
+                    filename: 'models/[hash][ext][query]'
+                }
+            }
         ]
     },
     output: {
-        path: path.resolve(__dirname, 'public', 'scripts'),
-        filename: 'main.js'
+        path: path.resolve(__dirname, 'public'),
+        filename: 'scripts/[contenthash].js'
     },
     plugins: [
-        new CopyPlugin({
-            patterns: [
-                { from: 'src/models', to: 'models' },
-                { from: 'src/images', to: 'images' },
-                { from: 'src/styles', to: 'styles' }
-            ]
-        }),
         new HtmlWebpackPlugin()
     ]
 }

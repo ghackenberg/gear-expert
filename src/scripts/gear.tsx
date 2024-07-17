@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as THREE from 'three'
 import { createGear } from './util'
 
-export function Gear(props: { teeth: number, onDragStart: React.DragEventHandler<HTMLDivElement> }) {
+export function Gear(props: { teeth: 10 | 20 | 30, onDragStart: React.DragEventHandler<HTMLDivElement> }) {
 
     const canvasRef = React.createRef<HTMLDivElement>()
 

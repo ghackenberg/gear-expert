@@ -1,9 +1,30 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
+import * as GearPlain10 from '../models/plain/gear10.glb'
+import * as GearPlain20 from '../models/plain/gear20.glb'
+import * as GearPlain30 from '../models/plain/gear30.glb'
+
+import * as GearShaft10 from '../models/shaft/gear10.glb'
+import * as GearShaft20 from '../models/shaft/gear20.glb'
+import * as GearShaft30 from '../models/shaft/gear30.glb'
+
+const models = {
+    'plain': {
+        10: GearPlain10,
+        20: GearPlain20,
+        30: GearPlain30
+    },
+    'shaft': {
+        10: GearShaft10,
+        20: GearShaft20,
+        30: GearShaft30
+    }
+}
+
 const loader = new GLTFLoader()
 
-export function createGear(teeth: number, style: 'plain' | 'shaft', x: number, y: number, z: number, angle: number, speed: number, r: number, g: number, b: number, name: string) {
+export function createGear(teeth: 10 | 20 | 30, style: 'plain' | 'shaft', x: number, y: number, z: number, angle: number, speed: number, r: number, g: number, b: number, name: string) {
     const group = new THREE.Group()
     group.name = name
     group.position.x = x
@@ -12,7 +33,7 @@ export function createGear(teeth: number, style: 'plain' | 'shaft', x: number, y
     group.rotation.y = angle
     group.userData = { teeth, style, x, y, z, angle, speed, r, g, b }
 
-    loader.loadAsync(`models/${style}/gear${teeth}.gltf`).then(model => {
+    loader.loadAsync(models[style][teeth]).then(model => {
         model.scene.position.y = -0.005
         
         for (const parent of model.scene.children) {

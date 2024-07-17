@@ -1,9 +1,13 @@
 import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { Helmet } from 'react-helmet'
 
 import { World } from './world'
-import { Helmet } from 'react-helmet'
+
+import * as GearIcon from '../images/gear.png'
+
+import '../styles/main.css'
 
 // Router
 
@@ -27,8 +31,7 @@ root.render(
     <>
         <Helmet>
             <title>Gear Expert</title>
-            <link rel="icon" href="/images/gear.png"/>
-            <link rel="stylesheet" href="/styles/main.css"/>
+            <link rel="icon" href={GearIcon}/>
         </Helmet>
         <RouterProvider router={router}/>
     </>

@@ -1,7 +1,9 @@
 import * as React from 'react'
 import * as THREE from 'three'
-import { createGear, round, snap } from './util'
+import { createGear, snap } from './util'
 import { Gear } from './gear'
+
+import * as TrashIcon from '../images/trash.png'
 
 const module = 0.002
 const epsilon = 0.00001
@@ -341,7 +343,7 @@ export function World() {
         <div id='world'>
             <div id='canvas' ref={canvasRef} draggable onDragStart={onDragStartCanvas} onDragOver={onDragOverCanvas} onDrop={onDropCanvas}/>
             <div id='trash' onDragOver={onDragOverTrash} onDragLeave={onDragLeaveTrash} onDrop={onDropTrash}>
-                <img src='/images/trash.png'/>
+                <img src={TrashIcon}/>
             </div>
             <div id='palette' onDragOver={onDragOverPalette} onDrop={onDropPalette}>
                 <Gear teeth={10} onDragStart={onDragStartPaletteItem}/>
