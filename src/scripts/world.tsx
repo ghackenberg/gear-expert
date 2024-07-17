@@ -134,7 +134,7 @@ export function World() {
 
         raycaster.setFromCamera(mouse, camera)
 
-        const intersections = raycaster.intersectObjects(gears.children, true)
+        const intersections = raycaster.intersectObjects(gears.children.map(gear => gear.children[0]), true)
 
         if (intersections.length > 0) {
             return intersections[0].object

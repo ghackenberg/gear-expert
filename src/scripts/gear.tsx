@@ -42,7 +42,7 @@ export function Gear(props: { teeth: 10 | 20 | 30, onDragStart: React.DragEventH
 
         // Camera
 
-        camera.position.set(0, 0.1, 0.05)
+        camera.position.set(0, 0.12, 0.06)
         camera.lookAt(0, 0, 0)
 
         // Renderer

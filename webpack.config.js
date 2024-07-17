@@ -39,7 +39,7 @@ const config = {
         filename: 'scripts/[contenthash].js'
     },
     plugins: [
-        new HtmlWebpackPlugin()
+        new HtmlWebpackPlugin({ title: 'Gear Expert' })
     ]
 }
 

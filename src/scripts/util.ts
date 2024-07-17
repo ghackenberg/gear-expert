@@ -22,6 +22,8 @@ const models = {
     }
 }
 
+const factor = 0.05
+
 const loader = new GLTFLoader()
 
 export function createGear(teeth: 10 | 20 | 30, style: 'plain' | 'shaft', x: number, y: number, z: number, angle: number, speed: number, r: number, g: number, b: number, name: string) {
@@ -34,20 +36,53 @@ export function createGear(teeth: 10 | 20 | 30, style: 'plain' | 'shaft', x: num
     group.userData = { teeth, style, x, y, z, angle, speed, r, g, b }
 
     loader.loadAsync(models[style][teeth]).then(model => {
-        model.scene.position.y = -0.005
+        const faceRoot = model.scene
+        const wireRoot = new THREE.Group()
         
-        for (const parent of model.scene.children) {
-            for (const child of parent.children) {
-                const mesh = child as THREE.Mesh
+        for (const faceParent of faceRoot.children) {
 
-                const material  = mesh.material as THREE.MeshStandardMaterial
-                material.color.r = r
-                material.color.g = g
-                material.color.b = b
+            // Wire parent
+
+            const wireParent = new THREE.Group()
+            wireParent.position.copy(faceParent.position)
+            wireParent.rotation.copy(faceParent.rotation)
+
+            for (const faceChild of faceParent.children) {
+
+                // Face child
+
+                const faceChildMsh = faceChild as THREE.Mesh
+
+                const faceChildMat  = faceChildMsh.material as THREE.MeshStandardMaterial
+                faceChildMat.polygonOffset = true
+                faceChildMat.polygonOffsetFactor = 1
+                faceChildMat.polygonOffsetUnits = 1
+                faceChildMat.color.r = r
+                faceChildMat.color.g = g
+                faceChildMat.color.b = b
+
+                // Wire child
+
+                const wireChildGeo = new THREE.EdgesGeometry(faceChildMsh.geometry.clone(), 90)
+
+                const wireChildMat = new THREE.LineBasicMaterial()
+                wireChildMat.color.r = r * factor
+                wireChildMat.color.g = g * factor
+                wireChildMat.color.b = b * factor
+
+                const wireChildSgm = new THREE.LineSegments(wireChildGeo, wireChildMat)
+                wireChildSgm.position.copy(faceChildMsh.position)
+                wireChildSgm.rotation.copy(faceChildMsh.rotation)
+
+                wireParent.add(wireChildSgm)
+
             }
+
+            wireRoot.add(wireParent)
         }
 
-        group.add(model.scene)
+        group.add(faceRoot)
+        group.add(wireRoot)
     })
 
     return group
